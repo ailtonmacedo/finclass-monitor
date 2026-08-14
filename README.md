@@ -1,169 +1,169 @@
-Finclass Monitor
+# Finclass Monitor
 
-Automação em Python para acessar a Carteira Finclass, coletar os ativos recomendados, gerar arquivos Excel, manter um histórico diário e enviar notificações por e-mail quando a carteira for alterada.
+> 📊 Automação em Python para acessar a Carteira Finclass, coletar ativos recomendados, gerar arquivos Excel, manter histórico diário e enviar notificações por e-mail quando a carteira for alterada.
 
-Script documentado: finclass_carteira.py
-A versão atual também pode estar com o nome finclass_carteira_v8_catalogo_ativos.py.
+**Script principal:** `finclass_carteira.py`
 
-1. O que o script faz
+---
+
+## 📋 Índice
+
+1. [O que o script faz](#-o-que-o-script-faz)
+2. [Requisitos](#-requisitos)
+3. [Estrutura do projeto](#-estrutura-recomendada)
+4. [Setup inicial](#-setup-inicial)
+5. [Configuração](#-configuração)
+6. [Execução](#-execução)
+7. [Modos auxiliares](#-modos-auxiliares)
+8. [Arquivos gerados](#-arquivos-gerados)
+9. [Operação automática](#-operação-automática)
+10. [Troubleshooting](#-solução-de-problemas)
+11. [Comandos principais](#-comandos-principais)
+
+---
+
+## 🔄 O que o script faz
 
 Em uma execução normal, o script:
 
-Carrega as credenciais e configurações do arquivo .env.
+- ✅ Carrega as credenciais e configurações do arquivo `.env`
+- 🌐 Abre o Chromium com Playwright
+- 📍 Acessa https://app.finclass.com/
+- 🔑 Faz login quando necessário
+- 📂 Abre a área Carteira
+- 🏷️ Percorre todas as categorias encontradas na área Ativos
+- 📊 Coleta todas as linhas das `recommendation-table`
+- 📄 Gera o arquivo da carteira atual
+- 📑 Gera um catálogo com nomes dos ativos, fundos e empresas
+- 📈 Atualiza o histórico diário
+- 🔍 Compara a carteira atual com o último snapshot anterior
+- ⚠️ Detecta alterações
+- 📧 Envia um e-mail HTML quando houver mudanças
+- 🚫 Evita reenviar a mesma notificação várias vezes no mesmo dia
 
-Abre o Chromium com Playwright.
+### Fluxo do processo
 
-Acessa <https://app.finclass.com/>.
-
-Faz login quando necessário.
-
-Abre a área Carteira.
-
-Percorre todas as categorias encontradas na área Ativos.
-
-Coleta todas as linhas das recommendation-table.
-
-Gera o arquivo da carteira atual.
-
-Gera um catálogo com os nomes dos ativos, fundos e empresas.
-
-Atualiza o histórico diário.
-
-Compara a carteira atual com o último snapshot anterior.
-
-Detecta alterações.
-
-Envia um e-mail HTML quando houver mudanças.
-
-Evita reenviar a mesma notificação várias vezes no mesmo dia.
-
-Fluxo resumido:
-
+```
 Finclass
-↓
-Playwright
-↓
+    ↓
+Playwright (Chromium)
+    ↓
 Carteira
-↓
+    ↓
 Todas as recommendation-table
-↓
-┌───────────────────────────────┐
-│ finclass_carteira.xlsx │
-│ finclass_ativos.xlsx │
+    ↓
+┌─────────────────────────┐
+│ finclass_carteira.xlsx  │
+│ finclass_ativos.xlsx    │
 │ finclass_historico.xlsx │
-└───────────────────────────────┘
-↓
+└─────────────────────────┘
+    ↓
 Comparação com snapshot anterior
-↓
+    ↓
 Houve alteração?
-├── Não → encerra
-└── Sim → envia e-mail
+├── Não  → Encerra
+└── Sim  → Envia e-mail
+```
 
-2. Requisitos
+## ✅ Requisitos
 
-Recomendado:
+| Recurso          | Especificação                        |
+| ---------------- | ------------------------------------ |
+| **SO**           | Linux/Ubuntu (recomendado)           |
+| **Python**       | 3.8 ou superior                      |
+| **Ambiente**     | venv                                 |
+| **Navegador**    | Chromium (instalado pelo Playwright) |
+| **Finclass**     | Conta válida                         |
+| **E-mail**       | SMTP (ex: Gmail)                     |
+| **Dependências** | playwright, openpyxl, python-dotenv  |
 
-Linux/Ubuntu
+## 📁 Estrutura recomendada
 
-Python 3.8 ou superior
-
-venv
-
-Chromium instalado pelo Playwright
-
-Conta Finclass válida
-
-Conta de e-mail SMTP, por exemplo Gmail
-
-3. Estrutura recomendada
-
+```
 finclass/
-├── .env
-├── .gitignore
-├── requirements.txt
-├── finclass_carteira.py
-├── finclass_storage_state.json
-├── finclass_email_state.json
-├── finclass_carteira.xlsx
-├── finclass_ativos.xlsx
-└── finclass_historico.xlsx
+├── .env                          # Credenciais e configuração (NUNCA fazer commit)
+├── .gitignore                    # Ignorar arquivos sensibilidade
+├── requirements.txt              # Dependências do projeto
+├── README.md                     # Este arquivo
+├── finclass_carteira.py          # Script principal
+├── finclass_storage_state.json   # Sessão Playwright (auto-gerado)
+├── finclass_email_state.json     # Controle de e-mails (auto-gerado)
+├── finclass_carteira.xlsx        # Carteira atual (auto-gerado)
+├── finclass_ativos.xlsx          # Catálogo de ativos (auto-gerado)
+└── finclass_historico.xlsx       # Histórico acumulado (auto-gerado)
+```
 
-Os arquivos .xlsx, finclass_storage_state.json e finclass_email_state.json são criados/atualizados automaticamente.
+> **Nota:** Arquivos `.xlsx`, `.json` e `.log` são criados/atualizados automaticamente.
 
-4. Criando o ambiente virtual
+## 🚀 Setup inicial
 
-Entre na pasta do projeto:
+### Passo 1: Criar ambiente virtual
 
+```bash
 cd /home/cmopr/investimentos/finclass
-
-Crie o ambiente virtual:
 
 python3 -m venv .venv
 
-Ative:
-
 source .venv/bin/activate
 
-Atualize o pip:
-
 python -m pip install --upgrade pip
+```
 
-5. Dependências
+### Passo 2: Instalar dependências
 
-Um requirements.txt mínimo:
-
-playwright
-openpyxl
-python-dotenv
-
-Instale:
-
+```bash
 python -m pip install -r requirements.txt
+```
 
 Ou diretamente:
 
+```bash
 python -m pip install playwright openpyxl python-dotenv
+```
 
-Instale o Chromium:
+### Passo 3: Instalar Chromium
 
+```bash
 python -m playwright install chromium
+```
 
-Se o Linux informar que faltam bibliotecas do sistema:
+Se necessário instalar dependências do sistema:
 
+```bash
 python -m playwright install-deps chromium
+```
 
-Em algumas instalações pode ser necessário:
+Para algumas instalações:
 
+```bash
 sudo .venv/bin/python -m playwright install-deps chromium
+```
 
-Não use sudo para instalar o navegador no cache do usuário, salvo quando o comando for especificamente para dependências de sistema.
+> ⚠️ Não use `sudo` para instalar o navegador no cache do usuário, apenas para dependências de sistema.
 
-6. Configuração do .env
+## ⚙️ Configuração
 
-O .env deve ficar na mesma pasta do script.
+### Arquivo `.env`
 
-Exemplo:
+O arquivo `.env` deve ficar na mesma pasta do script principal.
 
-# ------------------------------------------------------------
+#### Exemplo completo:
 
+```env
+# ======================================
 # Finclass
-
-# ------------------------------------------------------------
+# ======================================
 
 FINCLASS_EMAIL=seu_email@gmail.com
 FINCLASS_PASSWORD="sua_senha_finclass"
 
-# Primeira execução: false.
-
-# Após validar a sessão, pode ser true para automação.
-
+# Primeira execução: false
+# Após validar a sessão: true
 FINCLASS_HEADLESS=false
 
-# ------------------------------------------------------------
-
+# ======================================
 # Notificações por e-mail
-
-# ------------------------------------------------------------
+# ======================================
 
 EMAIL_ENABLED=true
 
@@ -177,116 +177,52 @@ SMTP_PASSWORD="senha_de_app_do_google"
 EMAIL_FROM=seu_email@gmail.com
 EMAIL_FROM_NAME="Finclass Monitor"
 
-# Vários destinatários podem ser separados por vírgula.
-
+# Vários destinatários: separados por vírgula
 EMAIL_TO=seu_email@gmail.com
+```
 
-Variáveis disponíveis
+#### Variáveis disponíveis
 
-Variável
+| Variável            | Obrigatória    | Função                                                   |
+| ------------------- | -------------- | -------------------------------------------------------- |
+| `FINCLASS_EMAIL`    | ✅             | E-mail para login na Finclass                            |
+| `FINCLASS_PASSWORD` | ✅             | Senha da Finclass                                        |
+| `FINCLASS_HEADLESS` | ❌             | `true`: executa sem interface; `false`: mostra navegador |
+| `EMAIL_ENABLED`     | ❌             | Liga/desliga notificações                                |
+| `SMTP_HOST`         | ✅ (se e-mail) | Servidor SMTP                                            |
+| `SMTP_PORT`         | ✅ (se e-mail) | Porta SMTP                                               |
+| `SMTP_SECURITY`     | ✅ (se e-mail) | `starttls`, `ssl` ou `none`                              |
+| `SMTP_USER`         | ✅ (se e-mail) | Usuário SMTP                                             |
+| `SMTP_PASSWORD`     | ✅ (se e-mail) | Senha SMTP / Senha de app                                |
+| `EMAIL_FROM`        | ❌             | Remetente; padrão: `SMTP_USER`                           |
+| `EMAIL_FROM_NAME`   | ❌             | Nome exibido no e-mail                                   |
+| `EMAIL_TO`          | ✅ (se e-mail) | Destinatário(s)                                          |
 
-Obrigatória
-
-Função
-
-FINCLASS_EMAIL
-
-Sim
-
-E-mail usado no login da Finclass
-
-FINCLASS_PASSWORD
-
-Sim
-
-Senha da Finclass
-
-FINCLASS_HEADLESS
-
-Não
-
-true executa o Chromium sem interface gráfica
-
-EMAIL_ENABLED
-
-Não
-
-Liga/desliga notificações de alterações
-
-SMTP_HOST
-
-Sim para e-mail
-
-Servidor SMTP
-
-SMTP_PORT
-
-Sim para e-mail
-
-Porta SMTP
-
-SMTP_SECURITY
-
-Sim para e-mail
-
-starttls, ssl ou none
-
-SMTP_USER
-
-Sim para e-mail
-
-Usuário SMTP
-
-SMTP_PASSWORD
-
-Sim para e-mail
-
-Senha SMTP / Senha de app
-
-EMAIL_FROM
-
-Não
-
-Remetente; padrão é SMTP_USER
-
-EMAIL_FROM_NAME
-
-Não
-
-Nome apresentado no e-mail
-
-EMAIL_TO
-
-Sim para e-mail
-
-Destinatário(s), separados por vírgula
-
-7. Gmail
+### Configuração para Gmail
 
 Para Gmail, use:
 
+```env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURITY=starttls
 
-No SMTP_PASSWORD, utilize uma Senha de app do Google, e não a senha normal da conta.
-
-Exemplo:
-
 SMTP_USER=usuario@gmail.com
 SMTP_PASSWORD="senha_de_app"
+```
 
-A conta precisa estar configurada adequadamente para gerar Senhas de app.
+> 🔐 **Importante:** Use uma [Senha de app do Google](https://myaccount.google.com/apppasswords), não a senha normal da conta.
 
-8. Segurança
+### 🔒 Segurança
 
-Nunca faça commit do .env.
+**Nunca faça commit do arquivo `.env`!**
 
-Exemplo de .gitignore:
+Exemplo de `.gitignore`:
 
+```
 .venv/
-**pycache**/
-\*.pyc
+**/__pycache__/
+*.pyc
 
 .env
 
@@ -297,24 +233,24 @@ finclass_carteira.xlsx
 finclass_historico.xlsx
 finclass_ativos.xlsx
 
-\*.log
+*.log
+```
 
-O finclass_storage_state.json pode conter dados de sessão do navegador e deve ser tratado como credencial.
+⚠️ O `finclass_storage_state.json` pode conter dados de sessão do navegador e deve ser tratado como credencial.
 
-Uso
+## ▶️ Execução
 
-9. Execução normal
+### Execução normal
 
-Com o .venv ativo:
+Com o `.venv` ativado:
 
+```bash
 python finclass_carteira.py
+```
 
-Ou:
+Saída esperada:
 
-.venv/bin/python finclass_carteira.py
-
-O script deve apresentar algo semelhante a:
-
+```
 Abrindo Carteira...
 Coletando: A - AÇÕES
 Coletando: R - REAL ESTATE (FUNDOS IMOBILIÁRIOS)
@@ -330,572 +266,442 @@ Catálogo de ativos: .../finclass_ativos.xlsx
 Nomes no catálogo: 37
 Nomes únicos: ...
 Histórico: .../finclass_historico.xlsx
+```
 
-10. Primeira execução
+### Primeira execução
 
 Na primeira execução, recomenda-se:
 
+```env
 FINCLASS_HEADLESS=false
+```
 
-Execute:
-
+```bash
 python finclass_carteira.py
+```
 
-Caso a Finclass solicite CAPTCHA, confirmação ou outro passo manual, conclua no navegador.
+Se a Finclass solicitar CAPTCHA, confirmação ou outro passo manual, conclua no navegador.
 
-Após uma autenticação bem-sucedida, o Playwright salva a sessão em:
+Após autenticação bem-sucedida, o Playwright salva a sessão em: `finclass_storage_state.json`
 
-finclass_storage_state.json
+Para automação posterior, teste:
 
-Para uma execução automática posterior, teste:
-
+```env
 FINCLASS_HEADLESS=true
+```
 
-e execute novamente:
+Após validar que funciona sem interface gráfica, está pronto para agendamento automático.
 
-python finclass_carteira.py
+## 🛠️ Modos auxiliares
 
-A execução deve funcionar sem abrir uma janela gráfica.
+### Testar e-mail (SMTP)
 
-Modos auxiliares
-
-11. Testar o e-mail
-
-O modo:
-
+```bash
 python finclass_carteira.py --test-email
+```
 
-faz somente o teste SMTP.
+Este modo:
 
-Ele:
-
-não acessa a Finclass;
-
-não altera o histórico;
-
-não altera o estado de notificações;
-
-envia um e-mail de teste ao EMAIL_TO.
+- ✅ Não acessa a Finclass
+- ✅ Não altera o histórico
+- ✅ Não altera o estado de notificações
+- ✅ Envia um e-mail de teste ao `EMAIL_TO`
 
 Saída esperada:
 
+```
 Testando SMTP smtp.gmail.com:587 (starttls)...
 E-mail de teste enviado com sucesso para: usuario@gmail.com
+```
 
-Esse é o primeiro teste a fazer antes de ativar notificações automáticas.
+Recomendação: Execute este teste **antes de ativar notificações automáticas**.
 
-12. Simular uma alteração
+### Simular uma alteração
 
-Use:
-
+```bash
 python finclass_carteira.py --simulate-change
+```
 
-Esse modo envia um e-mail utilizando o mesmo layout da notificação real e simula alterações como:
+Este modo:
 
-% ALTERADA;
-
-ADICIONADO;
-
-REMOVIDO.
-
-O modo de simulação:
-
-não acessa a Finclass;
-
-não altera finclass_carteira.xlsx;
-
-não altera finclass_historico.xlsx;
-
-não altera finclass_email_state.json.
+- ✅ Simula alterações como: `% ALTERADA`, `ADICIONADO`, `REMOVIDO`
+- ✅ Envia e-mail com o mesmo layout da notificação real
+- ✅ Não acessa a Finclass
+- ✅ Não altera arquivos Excel
+- ✅ Não altera o estado de notificações
 
 Saída esperada:
 
+```
 Enviando simulação de alteração para: usuario@gmail.com
 E-mail de simulação enviado com sucesso.
 Nenhum arquivo Excel ou estado de notificação foi alterado.
+```
 
-Arquivos gerados
+### Ver opções disponíveis
 
-13. finclass_carteira.xlsx
+```bash
+python finclass_carteira.py --help
+```
 
-Representa a carteira atual.
+## 📊 Arquivos gerados
 
-É recriado a cada execução.
+### `finclass_carteira.xlsx`
 
-Contém:
+Representa a **carteira atual** (snapshot do dia).
 
-uma aba Consolidado;
+- 🔄 Recriado a cada execução
+- 📋 Uma aba `Consolidado`
+- 📑 Uma aba para cada categoria encontrada
 
-uma aba para cada categoria encontrada na Finclass.
+**Exemplos de categorias:**
 
-Exemplos de categorias:
+- A - AÇÕES
+- R - REAL ESTATE (FUNDOS IMOBILIÁRIOS)
+- C - CAIXA (RENDA FIXA)
+- A - ALTERNATIVOS
 
-A - AÇÕES
-R - REAL ESTATE (FUNDOS IMOBILIÁRIOS)
-C - CAIXA (RENDA FIXA)
-A - ALTERNATIVOS
+> ⚠️ Não é histórico. Representa apenas o último estado coletado.
 
-Esse arquivo não é histórico. Ele representa somente o último estado coletado.
-
-14. finclass_ativos.xlsx
+### `finclass_ativos.xlsx`
 
 Catálogo atual de ativos/fundos/empresas.
 
-É recriado a cada execução.
+- 🔄 Recriado a cada execução
+- 📋 Aba **Todos**: lista completa de itens
+- 📑 Aba **Nomes únicos**: remove duplicidades
 
-Aba Todos
+#### Aba "Todos"
 
 Contém uma linha para cada item coletado:
 
-Categoria
+| Categoria | Nome do ativo/fundo/empresa | Código/Ticker |
+| --------- | --------------------------- | ------------- |
+| A - AÇÕES | BR PARTNERS                 | BRBI11        |
+| A - AÇÕES | GRUPO MATEUS                | GMAT3         |
 
-Nome do ativo / fundo / empresa
+#### Aba "Nomes únicos"
 
-Código / Ticker
+Remove duplicidades usando: `Categoria + Nome + Código`
 
-A - AÇÕES
+Serve como catálogo de nomes distintos na carteira atual.
 
-BR PARTNERS
+### `finclass_historico.xlsx`
 
-BRBI11
+O **arquivo principal** de acompanhamento. Não perde dados anteriores.
 
-A - AÇÕES
+#### Aba "Histórico"
 
-GRUPO MATEUS
+Registra para cada execução:
 
-GMAT3
+| Data       | Categoria | % da Carteira | Nome         | Código |
+| ---------- | --------- | ------------- | ------------ | ------ |
+| 14/08/2026 | A - AÇÕES | 1,00%         | BR PARTNERS  | BRBI11 |
+| 14/08/2026 | A - AÇÕES | 2,50%         | GRUPO MATEUS | GMAT3  |
+| 15/08/2026 | A - AÇÕES | 1,50%         | BR PARTNERS  | BRBI11 |
 
-A quantidade desta aba deve ser compatível com Itens coletados.
+**Execução repetida no mesmo dia:**
 
-Aba Nomes únicos
+- Existe apenas um snapshot por data
+- Se executado várias vezes no mesmo dia, substitui apenas o snapshot desse dia
+- Dias anteriores são preservados
 
-Remove duplicidades utilizando:
+#### Aba "Alterações"
 
-Categoria + Nome + Código
+Registra mudanças detectadas:
 
-Serve como catálogo de nomes distintos disponíveis na carteira atual.
+| Data       | Ativo  | Alteração  | % anterior | % atual |
+| ---------- | ------ | ---------- | ---------- | ------- |
+| 15/08/2026 | BRBI11 | % ALTERADA | 1,00%      | 1,50%   |
+| 15/08/2026 | TEST3  | ADICIONADO | —          | 2,00%   |
+| 15/08/2026 | TEST11 | REMOVIDO   | 3,00%      | —       |
 
-15. finclass_historico.xlsx
+**Tipos de alteração:**
 
-Esse é o arquivo principal de acompanhamento.
+- `ADICIONADO`: novo ativo na carteira
+- `REMOVIDO`: ativo saiu da carteira
+- `% ALTERADA`: percentual mudou
+- `NOME ALTERADO`: nome do ativo foi alterado
 
-Ele não perde os dias anteriores.
+> 💡 O primeiro snapshot é tratado como base inicial e não marca todos os ativos como "ADICIONADO".
 
-Possui as abas:
+## 📧 Notificações
 
-Histórico
-Alterações
+### Quando o e-mail é enviado
 
-Aba Histórico
-
-Registra:
-
-Data
-Categoria
-% da Carteira
-Nome da empresa/ativo/fundo
-Código/Ticker
-
-Exemplo:
-
-Data
-
-Categoria
-
-% da Carteira
-
-Nome
-
-Código
-
-14/08/2026
-
-A - AÇÕES
-
-1,00%
-
-BR PARTNERS
-
-BRBI11
-
-14/08/2026
-
-A - AÇÕES
-
-2,50%
-
-GRUPO MATEUS
-
-GMAT3
-
-15/08/2026
-
-A - AÇÕES
-
-1,50%
-
-BR PARTNERS
-
-BRBI11
-
-Execução repetida no mesmo dia
-
-Existe apenas um snapshot por data.
-
-Se o script for executado novamente no mesmo dia:
-
-08:00 → snapshot do dia
-13:00 → substitui somente o snapshot desse mesmo dia
-20:00 → substitui novamente somente esse dia
-
-Os dias anteriores são preservados.
-
-Exemplo:
-
-14/08 → preservado
-15/08 → preservado
-16/08 → atualizado pela última execução de 16/08
-
-16. Comparação histórica
-
-Cada novo snapshot é comparado com a última data anterior existente.
-
-Exemplo:
-
-14/08 → cria base inicial
-15/08 → compara com 14/08
-16/08 → compara com 15/08
-
-Se o script não executar no dia 15:
-
-14/08 → base
-16/08 → compara com 14/08
-
-A comparação não exige dias consecutivos.
-
-17. Alterações detectadas
-
-A aba Alterações pode registrar:
-
-ADICIONADO
-REMOVIDO
-% ALTERADA
-NOME ALTERADO
-
-Exemplo:
-
-Data
-
-Ativo
-
-Alteração
-
-% anterior
-
-% atual
-
-15/08/2026
-
-BRBI11
-
-% ALTERADA
-
-1,00%
-
-1,50%
-
-15/08/2026
-
-TEST3
-
-ADICIONADO
-
-—
-
-2,00%
-
-15/08/2026
-
-TEST11
-
-REMOVIDO
-
-3,00%
-
-—
-
-O primeiro snapshot é tratado como base inicial e não gera falsamente todos os ativos como ADICIONADO.
-
-Notificações
-
-18. Quando o e-mail é enviado
-
-No modo normal:
-
+```
 Coleta
-↓
+  ↓
 Atualiza histórico
-↓
+  ↓
 Compara com snapshot anterior
-↓
-Alterações?
-├── 0 → nenhum e-mail
-└── > 0 → envia e-mail
+  ↓
+Alterações detectadas?
+├── 0 alterações → Nenhum e-mail
+└── > 0 alterações → Envia e-mail
+```
 
-Se não houver alteração:
+**Se não houver alteração:**
 
+```
 Alterações detectadas: 0
 E-mail: nenhuma alteração; nenhum e-mail enviado.
+```
 
-Se houver alteração, o e-mail apresenta uma tabela com:
+**Se houver alteração:**
+O e-mail apresenta uma tabela com:
 
-tipo de alteração;
+- Tipo de alteração
+- Categoria
+- Nome do ativo/fundo/empresa
+- Ticker/código
+- Percentual anterior
+- Percentual atual
 
-categoria;
+### Prevenção de e-mails duplicados
 
-nome do ativo/fundo/empresa;
+O arquivo `finclass_email_state.json` guarda a **assinatura da última notificação enviada**.
 
-ticker/código;
+**Exemplo:**
 
-percentual anterior;
-
-percentual atual.
-
-19. Prevenção de e-mails duplicados
-
-O arquivo:
-
-finclass_email_state.json
-
-guarda a assinatura da última notificação enviada.
-
-Exemplo:
-
+```
 08:00 → alteração A → envia
 10:00 → mesma alteração A → não envia novamente
-13:00 → nova situação A+B → envia
+13:00 → nova situação A+B → envia (assinatura diferente)
+```
 
-A assinatura só é gravada depois que o SMTP confirma o envio.
+> 💡 A assinatura só é gravada após o SMTP confirmar o envio com sucesso.
 
-Integridade dos dados
+## ✔️ Integridade dos dados
 
-20. Validação da quantidade de itens
+### Validação da quantidade de itens
 
-O script possui verificações de consistência.
+O script possui verificações de **consistência automáticas**.
 
 Se a Finclass retornar:
 
+```
 Itens coletados: 37
+```
 
-o histórico também deve apresentar:
+O histórico deve apresentar:
 
+```
 Snapshot histórico: 37 itens
+```
 
-O catálogo completo também deve ter:
+E o catálogo completo:
 
+```
 Nomes no catálogo: 37
+```
 
-Se os números não coincidirem, o script gera erro em vez de gravar silenciosamente um histórico incompleto.
+**Se os números não coincidirem:**
 
-Isso é proposital para evitar perda de dados.
+- ❌ O script gera erro e **não grava** um histórico incompleto
+- ✅ Isso é proposital para **evitar perda de dados**
 
-Operação automática
+---
 
-21. Execução em modo headless
+## 🤖 Operação automática
 
-Depois de confirmar que login e sessão estão funcionando:
+### Modo headless
 
+Depois de validar login e sessão:
+
+```env
 FINCLASS_HEADLESS=true
+```
 
 Teste:
 
+```bash
 python finclass_carteira.py
+```
 
-Se funcionar, o script está preparado para scheduler/cron.
+Se funcionar sem abrir interface gráfica, está pronto para automação/scheduler.
 
-22. Agendamento local com cron
+### Agendamento com cron
 
-Exemplo: executar todos os dias às 08:00.
+Para executar **todos os dias às 08:00**:
 
-Abra:
-
+```bash
 crontab -e
+```
 
 Adicione:
 
-0 8 \* \* \* cd /home/cmopr/investimentos/finclass && /home/cmopr/investimentos/finclass/.venv/bin/python /home/cmopr/investimentos/finclass/finclass_carteira.py >> /home/cmopr/investimentos/finclass/finclass.log 2>&1
+```bash
+0 8 * * * cd /home/cmopr/investimentos/finclass && /home/cmopr/investimentos/finclass/.venv/bin/python /home/cmopr/investimentos/finclass/finclass_carteira.py >> /home/cmopr/investimentos/finclass/finclass.log 2>&1
+```
 
 Verifique o log:
 
+```bash
 tail -f /home/cmopr/investimentos/finclass/finclass.log
+```
 
-O cron local só funciona enquanto essa máquina estiver ligada.
+> ⚠️ Cron local só funciona enquanto a máquina estiver **ligada**.  
+> Para automação 24/7, hospede em um servidor/VPS ou ambiente cloud.
 
-Para executar com o computador desligado, hospede o projeto em um servidor/VPS ou outro ambiente cloud que fique ativo continuamente.
+## 🔧 Solução de problemas
 
-Solução de problemas
+### ModuleNotFoundError: No module named 'dotenv'
 
-23. ModuleNotFoundError: No module named 'dotenv'
+Ative o `.venv`:
 
-Ative o .venv:
-
+```bash
 source .venv/bin/activate
+```
 
 Instale:
 
+```bash
 python -m pip install python-dotenv
+```
 
 Ou:
 
+```bash
 python -m pip install -r requirements.txt
+```
 
-24. Não foi possível resolver a importação "playwright.sync_api"
+---
+
+### Erro: "Não foi possível resolver a importação 'playwright.sync_api'"
 
 Confirme o ambiente:
 
+```bash
 which python
 python -c "import sys; print(sys.executable)"
-python -c "import playwright.sync_api; print(playwright.sync_api.**file**)"
+python -c "import playwright.sync_api; print(playwright.sync_api.__file__)"
+```
 
-No VS Code:
+**No VS Code:**
 
-Ctrl + Shift + P
-→ Python: Select Interpreter
-→ .venv/bin/python
+1. `Ctrl + Shift + P`
+2. Python: Select Interpreter
+3. Selecione `.venv/bin/python`
+4. Developer: Reload Window
 
-Depois:
+---
 
-Developer: Reload Window
-
-25. Chromium não instalado
+### Chromium não instalado
 
 Teste:
 
+```bash
 python -m playwright install chromium
+```
 
-Se necessário:
+Se necessário, com timeout aumentado:
 
-PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT=120000 \
-python -m playwright install chromium
+```bash
+PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT=120000 python -m playwright install chromium
+```
 
-26. Erro de permissão em ~/.cache/ms-playwright
+---
 
-Exemplo:
+### EACCES: permission denied em ~/.cache/ms-playwright
 
-EACCES: permission denied
+Corrija o proprietário:
 
-Corrija o proprietário da pasta:
-
+```bash
 sudo chown -R "$USER":"$(id -gn)" ~/.cache/ms-playwright
 chmod -R u+rwX ~/.cache/ms-playwright
+```
 
 Depois:
 
+```bash
 python -m playwright install chromium
+```
 
-27. Problemas de login da Finclass
+---
 
-Troque temporariamente:
+### Problemas de login da Finclass
 
+Altere temporariamente:
+
+```env
 FINCLASS_HEADLESS=false
+```
 
 Execute:
 
+```bash
 python finclass_carteira.py
+```
 
-Conclua manualmente qualquer confirmação apresentada.
+Conclua manualmente qualquer confirmação (CAPTCHA, 2FA, etc).
 
-Depois teste novamente em:
+Depois teste novamente com:
 
+```env
 FINCLASS_HEADLESS=true
+```
 
-28. Problemas de e-mail
+---
+
+### Problemas de e-mail
 
 Primeiro execute:
 
+```bash
 python finclass_carteira.py --test-email
+```
 
-Se o teste falhar, revise:
+Se falhar, revise no `.env`:
 
-SMTP_HOST
-SMTP_PORT
-SMTP_SECURITY
-SMTP_USER
-SMTP_PASSWORD
-EMAIL_FROM
-EMAIL_TO
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_SECURITY`
+- `SMTP_USER`
+- `SMTP_PASSWORD`
+- `EMAIL_FROM`
+- `EMAIL_TO`
 
-Para Gmail:
+**Para Gmail, confirme:**
 
+```env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURITY=starttls
+SMTP_PASSWORD="senha_de_app_válida"
+```
 
-Use uma Senha de app válida.
+## 📚 Comandos principais
 
-Comandos principais
+| Comando                                         | Função                  |
+| ----------------------------------------------- | ----------------------- |
+| `source .venv/bin/activate`                     | Ativar ambiente virtual |
+| `python finclass_carteira.py`                   | Execução normal         |
+| `python finclass_carteira.py --test-email`      | Testar SMTP             |
+| `python finclass_carteira.py --simulate-change` | Simular mudança         |
+| `python finclass_carteira.py --help`            | Ver opções disponíveis  |
+| `python -m pip install -r requirements.txt`     | Instalar dependências   |
+| `python -m playwright install chromium`         | Instalar Chromium       |
+| `tail -f finclass.log`                          | Ver log em tempo real   |
+| `crontab -e`                                    | Editar agendamento cron |
 
-29. Resumo rápido
+---
 
-Ativar ambiente
-
-source .venv/bin/activate
-
-Execução normal
-
-python finclass_carteira.py
-
-Testar SMTP
-
-python finclass_carteira.py --test-email
-
-Simular mudança
-
-python finclass_carteira.py --simulate-change
-
-Ver opções disponíveis
-
-python finclass_carteira.py --help
-
-Instalar dependências
-
-python -m pip install -r requirements.txt
-
-Instalar Chromium
-
-python -m playwright install chromium
-
-Resultado esperado
+## ✨ Resultado esperado
 
 Uma execução normal bem-sucedida deve manter:
 
-finclass_carteira.xlsx
-→ estado atual completo
+| Arquivo                       | Propósito                                  |
+| ----------------------------- | ------------------------------------------ |
+| `finclass_carteira.xlsx`      | Estado atual completo                      |
+| `finclass_ativos.xlsx`        | Catálogo atual de ativos/fundos/empresas   |
+| `finclass_historico.xlsx`     | Snapshots acumulados + alterações          |
+| `finclass_storage_state.json` | Sessão Playwright (não expor publicamente) |
+| `finclass_email_state.json`   | Controle de notificações já enviadas       |
 
-finclass_ativos.xlsx
-→ catálogo atual de ativos/fundos/empresas
+### Objetivo operacional
 
-finclass_historico.xlsx
-→ snapshots acumulados + alterações
-
-finclass_storage_state.json
-→ sessão Playwright
-
-finclass_email_state.json
-→ controle de notificações já enviadas
-
-O objetivo operacional é:
-
-Executar diariamente
-↓
-Coletar 100% da Carteira Finclass
-↓
-Preservar o histórico
-↓
-Identificar qualquer alteração
-↓
-Enviar notificação somente quando necessário
-
+```
 Executar diariamente
        ↓
 Coletar 100% da Carteira Finclass
@@ -905,3 +711,20 @@ Preservar o histórico
 Identificar qualquer alteração
        ↓
 Enviar notificação somente quando necessário
+```
+
+---
+
+## 📝 Notas finais
+
+- ✅ Sempre use um ambiente virtual (`.venv`)
+- 🔒 Nunca faça commit de `.env` ou arquivos de estado
+- 📊 O histórico é acumulativo e nunca é perdido
+- 📧 E-mails duplicados são evitados automaticamente
+- 🚀 Após validar, está pronto para automação com cron/scheduler
+- 💾 Faça backup do `finclass_historico.xlsx` periodicamente
+
+---
+
+**Versão:** finclass_carteira.py  
+**Última atualização:** Agosto 2026
