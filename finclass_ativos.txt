@@ -1,5 +1,5 @@
 FINCLASS - ATIVOS / FUNDOS / EMPRESAS
-Gerado em: 17/08/2026 11:23:41
+Gerado em: 19/08/2026 10:43:22
 Itens coletados: 37
 Nomes únicos: 37
 
@@ -43,7 +43,7 @@ GOLD11 (no exterior é o IAU) | Internacional
 HTEK11 | Teses alternativas
 IBIUNA HEDGE ST | Multimercado
 KAPITALO KAPPA (OU ZETA) | Multimercado
-MS GLOBAL OPPORTUNITIES | Internacional
+MS GLOBAL OPPORTUNITIES DÓLAR | Internacional (33.913.562/0001-85)
 NUCL11 | Teses alternativas
 USDB11 (no exterior é o BND) | Internacional
 WRLD11 (no exterior é o VT) | Internacional
