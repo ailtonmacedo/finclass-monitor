@@ -1,7 +1,7 @@
 FINCLASS - ATIVOS / FUNDOS / EMPRESAS
-Gerado em: 30/09/2026 11:37:50
-Itens coletados: 37
-Nomes únicos: 37
+Gerado em: 05/10/2026 11:13:26
+Itens coletados: 38
+Nomes únicos: 38
 
 [A - AÇÕES]
 BR PARTNERS | BRBI11
@@ -9,6 +9,7 @@ GRUPO MATEUS | GMAT3
 KEPLER WEBER | KEPL3
 PRIO | PRIO3
 SLC AGRÍCOLA | SLCE3
+VALE S.A | VALE3
 VAMOS | VAMO3
 WIZ CO. | WIZC3
 
